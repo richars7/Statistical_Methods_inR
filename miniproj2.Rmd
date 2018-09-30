@@ -1,0 +1,157 @@
+---
+title: "MiniProject 2"
+author: "Richa Singh"
+date: "September 27, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1 
+
+Roadrace data:
+```{r}
+my_data <- read.csv("roadrace.csv",na.strings = "*")
+```
+(a) Create a bar graph of the variable Maine, which identifies whether a runner is from Maine or from somewhere else (stated using Maine and Away). You can use barplot function for this. What can we conclude from the plot? Back up your conclusions with relevant summary statistics.
+
+```{r}
+name <- c("Away","Maine")
+barplot(table(my_data$Maine),main = "Barplot of whether a runner is from Maine or Away",xlab = "Distribution of runners",col = c("lightblue","pink"),legend=name)
+```
+
+From the barplot we can conclude that approx. 1400 runners are from Away cities and approx. 4400 runners are from Maine city. Hence, the proportion of runners from Maine city to the Away city is approximately 3:1 (to be precise 3.146:1) i.e we can say that the participation of runners from Maine city was thrice the participation from Away cities.
+
+(b) Create two histograms the runners??? times (given in minutes) ??? one for the Maine group and
+the second for the Away group. Make sure that the histograms on the same scale. What can
+we conclude about the two distributions? Back up your conclusions with relevant summary
+statistics, including mean, standard deviation, range, median, and interquartile range.
+```{r}
+library(dplyr)
+data1 <- filter(my_data, my_data$Maine == "Away")
+data2 <- filter(my_data, my_data$Maine == "Maine")
+hist(data1$Time..minutes.,main="Histogram for Away runners", 
+     xlab="Time in minutes",ylab = "Frequency", xlim = c(0,200),
+     border="blue", 
+     col="lightblue")
+hist(data2$Time..minutes.,main="Histogram for Maine runners", 
+     xlab="Time in minutes", ylab = "Frequency", xlim = c(0,200),
+     border="red", 
+     col="pink")
+```
+
+From the above histogram distribution we can say that runners from Away cities took comparitively less time to finish the race and the first position runner was clearly from the Away city. Also despite of the more number of runners from Maine city the mean time for completing the race is less for Away runners. Some of the Maine runners took the most time to complete the race. Also, we see that both the histograms are somewhat normally distributed and unimodal.
+
+This might give us a little bit of idea that the people from Maine don't exercise regulary or keep their body fit.
+
+Statistics for the Away runners:
+```{r For the Away runners}
+summary(data1$Time..minutes.)
+mean(data1$Time..minutes.)
+sd(data1$Time..minutes.)
+range(data1$Time..minutes.)
+median(data1$Time..minutes.)
+IQR(data1$Time..minutes.)
+```
+
+Statistics for the Maine runners:
+```{r For the Maine runners}
+summary(data2$Time..minutes.)
+mean(data2$Time..minutes.)
+sd(data2$Time..minutes.)
+range(data2$Time..minutes.)
+median(data2$Time..minutes.)
+IQR(data2$Time..minutes.)
+```
+
+(c) Repeat (b) but with side-by-side boxplots.
+```{r}
+name <- c("Away Runners","Maine Runners")
+boxplot(data1$Time..minutes.,data2$Time..minutes.,horizontal = TRUE,names = name,main="Side-by-side boxplot of Away and Maine runners", xlab="Time taken in mins to complete the competition",col = "lightblue") 
+```
+
+From the boxplot similar conclusion can be drawn. We can see that runners from Away cities come first. 
+Although we can see that their are many outliers both for the Maine runners and the Away runners but more number of outliers are in the Maine city which tells their might be an some external factor affecting the competition.
+
+(d) Create side-by-side boxplots for the runners??? ages (given in years) for male and female runners.
+What can we conclude about the two distributions? Back up your conclusions with relevant
+summary statistics, including mean, standard deviation, range, median, and interquartile range.
+```{r}
+data3 <- filter(my_data, my_data$Sex == "M")
+data4 <- filter(my_data, my_data$Sex == "F")
+g<-c("Male Runners","Female Runners")
+boxplot(data3$Age, data4$Age,col = "lightblue",horizontal = TRUE,names = g,main="Side-by-side boxplot of Male and Female runners",main="Side-by-side boxplot of Male and Female runners", xlab="Age of the runners")
+```
+
+From the above statistics we can say that median age of females is less that median age of males .Also the range of females is more than the range of males telling that almost every age of womens participated in the running competition in comparison to males. Also their are more number of outliers for female runners which may be due to some external factors.
+
+Statistics for the Male runners:
+```{r For the Male runners}
+summary(data3$Age)
+mean(data3$Age)
+sd(data3$Age)
+range(data3$Age)
+median(data3$Age)
+IQR(data3$Age)
+```
+
+Statistics for the Female runners:
+```{r For the Female runners}
+summary(data4$Age)
+mean(data4$Age)
+sd(data4$Age)
+range(data4$Age)
+median(data4$Age)
+IQR(data4$Age)
+```
+
+## Question 2
+
+Consider the dataset motorcycle.csv. It contains the number of fatal motorcycle accidents that occurred in each county of South Carolina during 2009. Create a boxplot of data and provide relevant summary statistics. Discuss the features of the data distribution. Identify which counties may be considered outliers. Why might these counties have the highest numbers of motorcycle fatalities in South Carolina?
+
+```{r}
+motordata <- read.csv("motorcycle.csv")
+```
+
+Boxplot of the data
+```{r}
+boxplot(motordata$Fatal.Motorcycle.Accidents,col = "pink",main="Motorcycle data",horizontal = TRUE,xlab="Number of accidents in different counties")
+```
+
+From the above boxplot we can say that the median number of accidents is around 14 with minimum zero number of accidents and maximum 60 number of accidents. Their are two outliers with number of accidents 51 and 60 for the counties Greenville and Horry respectively.
+
+The main reason for the traffic fatalities in these counties could be the reckless and inattentive way some people operate their vehicles.
+
+Enforcement,speed,driving under the influence,failure to yield the right of way, driving left of the center line,problems with surface of the roads(crumbled) could be another factors.
+Also, Horry officials pointed out that many of its motorists are tourists who may be distracted by the sights and sounds of the beach while driving on unfamiliar roads. 
+
+Myrtle Beach Bike Week in South Carolina attracts thousands of motorcycle enthusiasts who are not required under state law to wear a helmet which might improve the rate of fatalities.
+Further, we can also say South Carolina could spend less in maintaining its roads than most other states. 
+
+Summary Statistics 
+```{r}
+summary(motordata$Fatal.Motorcycle.Accidents)
+mean(motordata$Fatal.Motorcycle.Accidents)
+sd(motordata$Fatal.Motorcycle.Accidents)
+range(motordata$Fatal.Motorcycle.Accidents)
+median(motordata$Fatal.Motorcycle.Accidents)
+IQR(motordata$Fatal.Motorcycle.Accidents)
+```
+The mean is greater than the median so the histogram should be skewed right.
+
+Data Distribution 
+```{r}
+hist(motordata$Fatal.Motorcycle.Accidents,col = "pink",main="Histogram for Motorcycle accidents", 
+     xlab="Number of accidents", ylab = "Frequency", xlim = c(0,100),
+     border="red")
+```
+
+Features of the data distribution:
+
+The data distibution looks like its right skewed, asymmetrical. From the box and whisker diagram we can also see that the median is closer to the first quartile than the third quartile. The fact that the right hand side tail of the distribution is longer than the left can also be seen in the distribution plot.
+
+```From the statistics we can see that Greenville, Horry counties have the most traffic deaths, followed by Richland and Charleston```
