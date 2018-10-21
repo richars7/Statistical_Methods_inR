@@ -1,2 +1,2 @@
-# Statistical_Methods_inR
+# Statistics for Data Science 
 
