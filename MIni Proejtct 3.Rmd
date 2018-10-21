@@ -1,0 +1,159 @@
+---
+title: "Mini Project 3"
+author: "Richa Singh"
+date: "October 11th, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list = ls())
+graphics.off()
+```
+
+## Question 1
+
+(a) Explain how you will compute the mean squared error of an estimator using Monte Carlo
+simulation.
+
+Ans. 
+To compute the mean squared error we need to get the uniform random samples(runif) with different values of n and theta given in the question. We are going to simulate the values from the uniform random distribution function and estimate the method of moment(which is mean of the random samples) and the maximum likliehood estimation(maximum value of the random sample) and hence, compute the mean squared error1 (difference between the estimates of random sample and the method of moment wholesquared) and mean squared error2 (difference between the estimates of random sample and the maximum liklehood estimation).
+
+```MSE= E[(Obs-exp)^2]```
+
+(b) For a given combination of (n,theta), compute the mean squared errors of both theta1 and theta2 using
+Monte Carlo simulation with N = 1000 replications. Be sure to compute both estimates from
+the same data.
+For the given combination : n=1,2,3,5,10,30 and theta= 1,5,50,100.
+```{r}
+library(hydroGOF)
+#For a given combination of number of simulations be 30 and max value of theta be 50.
+n <- 30
+o <- 50
+
+meansquare <- function(n,o) {
+  mse_mom_sim <- replicate(1000, mse(sim=(a<-runif(30,min=0,max=50)),obs=(replicate(30,(2*mean(a))))))
+  mse_mle_sim <- replicate(1000, mse(sim=(a<-runif(30,min=0,max=50)),obs=(replicate(30,(max(a))))))
+  print(mean(mse_mle_sim))
+  print(mean(mse_mom_sim))
+}
+meansquare(n, o)
+
+```
+
+(c) Repeat (b) for the remaining combinations of (n,theta). Summarize your results graphically.
+
+```{r, include=TRUE,results="hide", fig.width=8, fig.height=6}
+
+library(hydroGOF)
+# For every combination of (n,theta)
+p <- c(1,2,3,5,10,30)
+t <- c(1,5,50,100)
+comb <- expand.grid(p,t)
+meanerrors <- function(n,theta) {
+  mse_mom_sim <- replicate(1000, mse(sim=(a<-runif(n,min=0,max=theta)),obs=(replicate(n,(2*mean(theta))))))
+  mse_mle_sim <- replicate(1000, mse(sim=(a<-runif(n,min=0,max=theta)),obs=(replicate(n,(max(theta))))))
+  return(boxplot(mse_mom_sim,mse_mle_sim,main=" MOM vs MLE",col = "pink"))
+  #return(c(mean(mse_mom_sim),mean(mse_mle_sim)))
+  #return(c(mse_mom_sim,mse_mle_sim))
+}
+
+#For every combination of (n,theta)
+par(mfrow=c(3,4)) 
+for (i in p){
+  for (j in t) {
+    print(meanerrors(i,j))
+  }
+}
+
+```
+
+From the above 24 (combinations of n and theta) boxplot distribution we can see that the mean for MLE is much lower than the mean for MOM, telling that the mean MSE is low for MLE. Hence, MLE is a better estimate for uniform distribution.
+
+
+
+(d) Based on (c), which estimator is better? Does the answer depend on n or theta Explain. Provide
+justification for all your conclusions.
+
+Ans.
+Based on the graphical representation or the boxplot results for all the combinations of(n,theta), the mean squared error for Maximum likliehood estimator is less than the Method of moments estimation thus, telling that the Maximum likliehood is a better estimate than method of moment. (From theboxplot it is clear that the mean of the MLE is less than the mean of the MOM for all combinations of a uniform distribution).
+ 
+ Yes,the conclusion is dependent on theta and n because both MOM and MLE have different estimates for theta. For MOM it's 2*mean(theta) while for MLE it's max(theta) so the box plot varies accordingly. Also, number of simulations n also plays a major role in altering the results.
+
+
+## Question 2
+
+Suppose the lifetime, in years, of an electronic component can be modeled by a continuous random variable with probability density function f(x)= theta/x^(theta+1) for x >= 1 and  0, x < 1, where theta > 0 is an unknown parameter. Let X1, . . . , Xn be a random sample of size n from this population.
+
+(a) Derive an expression for maximum likelihood estimator of theta.
+
+Ans. 
+The first step is to setup a log-likliehood function then find the partial derivative of {log(L(theta))} with respect to theta and setting the derivative to zero . Solve the likeliehood equation for theta.
+
+= sum{log(f(x))}
+
+= sum{log(theta/x^(theta+1))}
+
+= sum{log(theta) -(theta+1)*log(x)}
+
+After diffrentiating w.r.t theta we get;
+
+     n*log(theta) -(theta+1)*log(sum(x))  =  0
+     
+     ```from here we get theta = n/sum(log(x))```
+
+ ```The maximum likliehood estimator of theta is = n/sum(log(x))```
+
+(b) Suppose n = 5 and the sample values are x1 = 21.72, x2 = 14.65, x3 = 50.42, x4 = 28.78, x5 =
+11.23. Use the expression in (a) to provide the maximum likelihood estimate for theta based on
+these data.
+
+```{r}
+n<-5
+x <- c(21.72, 14.65,50.42,28.78,11.23)
+mlestimate <- n/sum(log(x))
+print(mlestimate)
+```
+
+(c) Even though we know the maximum likelihood estimate from (b), use the data in (b) to obtain
+the estimate by numerically maximizing the log-likelihood function using optim function in R.
+Do your answers match?
+
+```{r}
+neg.loglik.fun <- function(par,dat) {
+  result <- sum(log(par/dat^(par+1)))
+  return(-result)
+}
+ml.est <- optim(par=1 , fn = neg.loglik.fun, method = "BFGS" ,hessian = TRUE, dat = x)
+
+print(ml.est)
+```
+Yes, the Maximum likliehood estimate matches anlalytically as well as optimally with the theta value equal to ```0.32338```
+
+(d) Use the output of numerical maximization in (c) to provide approximate standard error of the
+maximum likelihood estimate and an approximate 95% confidence interval for theta. Are these
+approximations going to be good? Justify your answer.
+
+```{r}
+
+stderror <- sqrt(diag(solve(ml.est$hessian)))
+print(stderror)
+
+mu <- mean(x)
+print(mu)
+
+alpha <- 0.05 
+n <- 5 
+conf.int <- function(mu, stderror,n , alpha){
+  ci <- round(mu + c(-1,1)*qt(1-(alpha/2), df = (n-1)) * stderror/sqrt(n), 3)
+  return(ci)
+}
+
+ci <- conf.int(mu, stderror, n, alpha)
+print(ci)
+```
+
+The approximations i.e the mean of the random sample is 25.36 which is a good approximator because it lies inside the confidence interval of [25.18 , 25.54] hence, we can safely say that the sample (21.72, 14.65,50.42,28.78,11.23) is a good approximator for the function f(x)= theta/x^(theta+1) .
