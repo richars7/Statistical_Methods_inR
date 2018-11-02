@@ -1,0 +1,225 @@
+---
+title: "Mini Project 4"
+author: "Richa Singh"
+date: "October 30,2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list = ls())
+graphics.off()
+```
+
+## Question 1 
+
+ In the class, we talked about bootstrap in the context of one-sample problems. But the idea
+of nonparametric bootstrap is easily generalized to more general situations. For example, suppose
+there are two dependent variables X1 and X2 and we have i.i.d. data on (X1, X2) from n independent
+subjects. In particular, the data consist of ```(Xi1, Xi2), i = 1, . . . , n, where the observations Xi1 and
+Xi2 come from the ith subject.``` Let theta be a parameter of interest ??? it???s a feature of the distribution
+of ```(X1, X2)```. We have an estimator theta-hat of theta that we know how to compute from the data. To obtain
+a draw from the bootstrap distribution of theta-hat, all we need to do is the following: randomly select n
+subject IDs with replacement from the original subject IDs, extract the observations for the selected
+IDs (yielding a resample of the original sample), and compute the estimate from the resampled data.
+This process can be repeated in the usual manner to get the bootstrap distribution of theta-hat and obtain
+the desired inference.
+Now, consider the gpa data stored in the gpa.txt file available on eLearning. The data consist of
+GPA at the end of freshman year (gpa) and ACT test score (act) for randomly selected 120 students
+from a new freshman class. Make a scatterplot of gpa against act and comment on the strength of
+linear relationship between the two variables. Let ```p``` denote the population correlation between gpa
+and act. Provide a point estimate of ```p```, bootstrap estimates of bias and standard error of the point
+estimate, and 95% confidence interval computed using percentile bootstrap. Interpret the results.
+```{r}
+library(ggplot2)
+data1 <- read.csv("gpa.csv")
+ggplot(data1, aes(x=gpa, y=act)) +
+  geom_point(size=2, shape=23,color="red")
+
+```
+
+```{r}
+corrplot::corrplot(cor(data1),method="ellipse",type="upper")
+```
+Provide a point estimate of ??, 
+```{r}
+cor(data1$gpa,data1$act)
+```
+
+Bootstrap estimates of bias and standard error of the point estimate, and 95% confidence interval computed using percentile bootstrap. Interpret the results.
+```{r}
+library(boot)
+corr.npar <- function(x,y,indices){
+  result <- corr(x[indices],y[indices])
+  return(result)
+}
+
+corr.npar.boot <- boot(data1, corr.npar,R = 999,sim = "ordinary",stype = "i")
+```
+
+Bootstrap estimates of bias and standard error of the point estimate
+```{r}
+boot(data1, corr.npar,R = 999,sim = "ordinary",stype = "i")
+```
+
+Bootstrap estimates of bias and standard error of the point estimate
+```{r}
+mean(corr.npar.boot$t)-corr.npar.boot$t0
+sd(corr.npar.boot$t)
+```
+
+```{r}
+plot(corr.npar.boot)
+```
+
+95% confidence interval computed using percentile bootstrap
+```{r}
+sort(corr.npar.boot$t)[c(25,975)]
+```
+
+```{r}
+boot.ci(boot.out = corr.npar.boot)
+```
+So, the bootstrap 95% C.I of the correlation comes out to be [0.1498240 , 0.3921693] where the point estimate of the correlation comes out to be 0.2694818 which tells that this correlation is a good estimate of the data.
+
+## Question 2
+
+Consider the data stored in the file VOLTAGE.DAT on eLearning. These data come from
+a Harris Corporation/University of Florida study to determine whether a manufacturing process
+performed at a remote location can be established locally. Test devices (pilots) were set up at both
+the remote and the local locations and voltage readings on 30 separate production runs at each
+location were obtained. In the dataset, the remote and local locations are indicated as 0 and 1,
+respectively.
+
+(a) (1 points) Perform an exploratory analysis of the data by examining the distributions of the
+voltage readings at the two locations. Comment on what you see. Do the two distributions
+seem similar? Justify your answer.
+```{r}
+data2 <- read.csv("VOLTAGE.csv")
+data2_0 <- data2[1:30,]
+data2_1 <- data2[31:60,]
+par(mfrow=c(2,1)) 
+hist(data2_0$voltage,xlim = c(8,11),ylim =c(0,15),main = "Histogram of the productions done remotely",xlab = "Voltage",col = "pink",breaks = "Sturges",border = "red")
+hist(data2_1$voltage,xlim = c(8,11),ylim =c(0,15),main = "Histogram of the productions done locally",xlab = "Voltage",col = "pink",breaks = "Sturges",border = "red")
+```
+
+The distribution of the voltage produced remotely and locally varies a lot. Both are approximately normally distribution as seen by the qq-plot .
+```{r}
+par(mfrow=c(2,1)) 
+qqnorm(data2_0$voltage, main="Q-Q plot for data of Voltage production done remotely")
+qqline(data2_0$voltage)
+qqnorm(data2_1$voltage, main="Q-Q plot for data of Voltage production done locally")
+qqline(data2_1$voltage)
+```
+Both the data distributions are approximately normal.
+
+```{r}
+boxplot(data2_0$voltage,data2_1$voltage,col = "pink",horizontal = TRUE,xlab="Voltage",main="Boxplot of the voltage distribution at two locations remotely and locally")
+```
+The variance for both the data is not same.So, the variance can't be assumed to be equal for both the populations.
+
+```{r}
+round(mean(data2_0$voltage)-mean(data2_1$voltage),4)
+```
+From the boxplot we can infer that the median for the locally voltage distribution is greater than the median for remotely voltage distribution and the voltages for the local location are have less varied range than the production done remotely. Also, the difference in the mean of the two population comes out to be positive.
+
+(b) (5 points) The manufacturing process can be established locally if there is no difference in the
+population means of voltage readings at the two locations. Does it appear that the manufacturing
+process can be established locally? Answer this question by constructing an appropriate
+confidence interval. Clearly state the assumptions, if any, you may be making and be sure to
+verify the assumptions.
+
+```{r}
+mean(data2_0$voltage)
+mean(data2_1$voltage)
+```
+
+For the formulation of the Hypothesis we can say that:
+
+Null Hypothesis - The difference of the mean between the two voltage population is equal to zero 
+Alternative Hypothesis - The difference of the mean between the two voltage population is not equal to zero 
+(confidence interval for mean difference (assumes normality) = (can use t.test function since we have the raw data))
+```{r}
+t.test(data2_0$voltage, data2_1$voltage, alternative = "two.sided", conf.level = 0.95, 
+	var.equal = FALSE)
+```
+The confidence interval comes out to be positive means:
+95% CI [0.1172284, 0.6454382]
+mean(voltage_production_remotely) - mean(voltage_production_locally) is greater than zero OR 
+mean(voltage_production_remotely) is greater than mean(voltage_production_locally)
+So, we can say that the Null Hypothesis is rejected and a manufacturing process performed at a remote location can't be established locally
+
+(c) (1 point) How does your conclusion in (b) compare with what you expected from the exploratory
+analysis in (a)?
+
+From the deterministic tests (mean,boxplot and histogram) it was clear that the voltages produced at both the locations were not similar(the mean for both the population varied a lot) but we needed an inferential test (Hypothesis Test) to validate the results.
+
+## Question 3
+
+The file VAPOR.DAT on eLearning provide data on theoretical (calculated) and experimental
+values of the vapor pressure for dibenzothiophene, a heterocycloaromatic compound similar to those
+found in coal tar, at given values of temperature. If the theoretical model for vapor pressure is a
+good model of reality, the true mean difference between the experimental and calculated values of
+vapor pressure will be zero. Perform an appropriate analysis of these data to see whether or not this
+is the case. Be sure to justify all the steps in the analysis.
+
+```{r}
+data3 <- read.csv("VAPOR.csv")
+```
+
+```{r}
+boxplot(data3$theoretical,data3$experimental,range = 1.5,horizontal = TRUE,col = "pink",outline = TRUE,ylab="boxplot of the theoretical and experimental group",xlab="Values of the vapor pressure")
+```
+From the boxplot we can say that both the experimental and the theoritical distributions are approximately same except a slight difference in the median of the population.
+
+```{r}
+par(mfrow=c(2,1)) 
+qqnorm(data3$theoretical, main="Q-Q plot for the theoretical data")
+qqline(data3$theoretical)
+qqnorm(data3$experimental, main="Q-Q plot for the experimental data")
+qqline(data3$experimental)
+```
+Both the distributions are normal.
+
+```{r}
+par(mfrow=c(2,1)) 
+hist(data3$theoretical,xlab = "Values of the vapor pressure",main = "Histogram of the theoritical distribution",col = "pink",border = "red")
+hist(data3$experimental,xlab = "Values of the vapor pressure",main = "Histogram of the Experimental distribution",col = "pink",border = "red")
+```
+The Histogram tells us except for the frequency change in first two breaks, rest all the frequency distribution tends to be same which tells us the mean diffrenece might be zero.
+
+The true mean difference between the experimental and calculated values of vapor pressure approxmately comes out to be zero.
+```{r}
+data3_mean <- data3$experimental- data3$theoretical
+round(abs(mean(data3_mean)),5)
+```
+Let's do the Hypothesis testing (Inferential test) to validate the results:
+Null Hypothesis : The true mean difference between the experimental and calculated values of
+vapor pressure will be zero
+Alternate Hypothesis : The true mean difference between the experimental and calculated values of
+vapor pressure will not be equal to zero
+
+As the population is a paired sample measured on a particular temperature, we will calculate the confidence Interval using paired sample C.I
+
+```{r}
+diff1 <- data3[,3] - data3[,2]
+alpha <- 0.05
+qqnorm(diff1, main="Q-Q plot for the difference in experimental and theoretical data")
+qqline(diff1)
+n1 <- length(diff1)
+ci_diff1 <- mean(diff1) + c(-1, 1)* qnorm(0.975) * sd(diff1)/sqrt(n1)
+```
+```{r}
+mean(diff1) + c(-1, 1)* qt(0.975, n1-1) * sd(diff1)/sqrt(n1)
+```
+```{r}
+mean(diff1) + c(-1, 1)* qnorm(0.975) * sd(diff1)/sqrt(n1)
+```
+
+The Confidence Interval comes out to be between [-0.007653232 , 0.006278232] which tells that the difference may be equal to zero and hence, accepting the Null Hypothesis that the theoretical model for vapor pressure is a
+good model of reality . 
+
+
