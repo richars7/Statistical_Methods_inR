@@ -1,0 +1,274 @@
+---
+title: "Mini Project 5"
+author: "Richa Singh"
+date: "11/13/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+rm(list = ls())
+graphics.off()
+```
+
+## Question 1
+
+Consider the data stored in bodytemp-heartrate.csv on eLearning, containing measurements of body temperature and heart rate for 65 male (gender = 1) and 65 female (gender = 2) subjects.
+
+(a) Do males and females differ in mean body temperature? Answer this question by performing an appropriate analysis of the data, including an exploratory analysis.
+
+```{r}
+data <- read.csv("bodytemp-heartrate(2).csv")
+data_male <- data[1:65,]
+data_female <- data[66:130,]
+```
+
+```{r}
+mean(data_male$body_temperature)
+mean(data_female$body_temperature)
+```
+The mean of both the male and female group body temperature comes out to be approximately same with a difference of just 0.2 
+
+```{r}
+par(mfrow=c(2,1)) 
+qqnorm(data_male$body_temperature, main="Q-Q plot for data of the body temperature of males in Farenheight")
+qqline(data_female$body_temperature)
+qqnorm(data_male$body_temperature, main="Q-Q plot for data of the body temperature of females in Farenheight")
+qqline(data_female$body_temperature)
+```
+From the above qqplot it is clear that both the data comes from an approximately normal distribution 
+
+```{r}
+par(mfrow=c(2,1)) 
+hist(data_male$body_temperature,main = "Histogram of the body temperature of males in Farenheight",xlab = "Temp. in Farenheight",col = "pink",breaks = "Sturges",border = "red")
+hist(data_female$body_temperature,main = "Histogram of the body temperature of females in Farenheight",xlab = "Temp. in Farenheight",col = "pink",breaks = "Sturges",border = "red")
+```
+
+```{r}
+par(mfrow=c(2,1)) 
+boxplot(data_male$body_temperature,col = "pink",horizontal = TRUE,xlab="Temp. in Farenheight",main="Boxplot of the body temperature of males in Farenheight")
+boxplot(data_female$body_temperature,col = "pink",horizontal = TRUE,xlab="Temp. in Farenheight",main="Boxplot of the body temperature of females in Farenheight")
+```
+
+The boxplot tells us that the variance for both the gender groups is different so now we know the following about the data:
+
+- The data comes from an approximately normal distribution 
+
+- The variance for both the group is not same
+
+Now performing the Hypothesis testing(Inferential Statistics) to validate the results:
+
+Null Hypothesis: The difference in mean body temperature between the male and female group is zero.
+
+Alternate Hypothesis : The difference in mean body temperature between male and female group  is not zero. 
+```{r}
+t.test(data_male$body_temperature, data_female$body_temperature, alternative = "two.sided", conf.level = 0.95, 
+    var.equal = FALSE)
+```
+From the above result we can say that the C.I comes out to be [-0.53964856 ,-0.03881298]. As, zero does not falls between [-0.53964856 ,-0.03881298] we here infer that the Null Hypothesis is rejected that is the mean body tempearture of male and the female group is not equal.
+
+
+(b) Do males and females differ in mean heart rate? Answer this question by performing an appropriate analysis of the data, including an exploratory analysis.
+
+```{r}
+mean(data_male$heart_rate)
+mean(data_female$heart_rate)
+```
+From the direct calculation of mean we can say that the mean heart rate of male and female group differs by 0.79
+
+```{r}
+par(mfrow=c(2,1)) 
+qqnorm(data_male$heart_rate, main="Q-Q plot for data of the heart_rate of males in Farenheight")
+qqline(data_female$heart_rate)
+qqnorm(data_male$heart_rate, main="Q-Q plot for data of the heart_rate of females in Farenheight")
+qqline(data_female$heart_rate)
+```
+From the above qqplot it is clear that both the data comes from an approximately normal distribution 
+
+```{r}
+par(mfrow=c(2,1)) 
+boxplot(data_male$heart_rate,col = "pink",horizontal = TRUE,xlab="Pulse per min",main="Boxplot of the heart_rate of males")
+boxplot(data_female$heart_rate,col = "pink",horizontal = TRUE,xlab="Pulse per min",main="Boxplot of the heart_rate of females")
+```
+The boxplot tells us that the variance for both the gender groups is different so now we know the following about the data:
+
+- The data comes from an approximately normal distribution 
+
+- The variance for both the group is not same
+
+```{r}
+par(mfrow=c(2,1)) 
+hist(data_male$heart_rate,main = "Histogram of the heart_rate of males",xlab = "Pulse per min",col = "pink",breaks = "Sturges",border = "red")
+hist(data_female$heart_rate,main = "Histogram of the heart_rate of females",xlab = "Pulse per min",col = "pink",breaks = "Sturges",border = "red")
+```
+
+Now performing the Hypothesis testing(Inferential Statistics) to validate the results:
+
+Null Hypothesis: The difference in mean heart_rate between the male and female group is zero.
+
+Alternate Hypothesis : The difference in mean heart_rate between male and female group is not zero. 
+
+```{r}
+t.test(data_male$heart_rate, data_female$heart_rate, alternative = "two.sided", conf.level = 0.95, 
+    var.equal = FALSE)
+```
+
+From the above result we can say that the C.I comes out to be [-3.243732,  1.674501]. As, zero does falls between [-3.243732,  1.674501] we here infer that the Null Hypothesis is accepted that is, the mean heart_rate of male and the female group is equal.
+
+
+(c) Is there a linear relationship between body temperature and heart rate? Does this relationship depend on gender? Answer these questions by performing an appropriate analysis of the data, including an exploratory analysis.
+
+```{r}
+library(ggplot2)
+ggplot(data) + geom_point(aes(x=data$body_temperature, y=data$heart_rate, colour=factor(data$gender)))+ xlab("body temperature") + ylab("heart rate") + ggtitle("Body temperature vs Heart rate") + scale_color_discrete(name = "Gender type", labels = c( "Male" ,"Female" ))
+```
+```{r}
+corrplot::corrplot(cor(data))
+```
+```{r}
+cor(data$body_temperature,data$heart_rate)
+```
+From the above graph we can say that their is very poor linear relationship between body temperature and heart rate that come out to be approximately 0.253
+
+```{r}
+ggplot(data_male) + geom_point(aes(x=data_male$body_temperature, y=data_male$heart_rate,colour="red"))+ xlab("body temperature") + ylab("heart rate") + ggtitle("Body temperature vs Heart rate for Males") 
+cor(data_male$body_temperature,data_male$heart_rate)
+ggplot(data_female) + geom_point(aes(x=data_female$body_temperature, y=data_female$heart_rate,colour="red"))+ xlab("body temperature") + ylab("heart rate") + ggtitle("Body temperature vs Heart rate for Females")
+cor(data_female$body_temperature,data_female$heart_rate)
+```
+
+So,from the above graph we can infer that the linear correlation of heart rate vs body temperature for females(0.286) is a little bit better in comparison to the linear correlation of heart rate vs body temperature for males (0.195)
+
+```{r, include=TRUE,results="hide"}
+corrplot::corrplot(cor(data_male),na.label.col = "pink",na.label = "square" )
+```
+```{r, include=TRUE,results="hide"}
+corrplot::corrplot(cor(data_female),na.label.col = "pink",na.label = "square" )
+```
+
+
+## Question 2
+
+The goal of this exercise to see how large n should be for the large-sample and the (parametric) bootstrap percentile method confidence intervals for the mean of an exponential population to be accurate. To be specific, let X1, . . . , Xn represent a random sample from an exponential distribution. Note that this distribution is skewed and its mean is ?? = 1/lambda. We can construct two confidence intervals for mean??? one the large-sample z-interval (interval 1) and the other a (parametric) bootstrap percentile method interval (interval 2). We would like to investigate their accuracy, i.e., how close their estimated coverage probabilities are to the assumed nominal level of confidence, for various combinations of (n, lambda). This investigation will focus on 1 ??? ?? = 0.95, lambda= 0.01, 0.1, 1,10 and n = 5, 10, 30, 100. Thus, we have a total of 4 ??? 4 = 16 combinations of (n, lambda) to investigate.
+ 
+ (a) For a given setting, compute Monte Carlo estimates of coverage probabilities of the two intervals by simulating appropriate data, using them to construct the two confidence intervals, and repeating the process 5000 times.
+
+```{r}
+alpha <- 0.05 
+n <- 10
+lambda <- 0.1
+p.5k <- replicate(5000,(rexp(n,lambda)))
+mu <- mean(p.5k)
+stderror <- sd(p.5k)
+conf.int1 <- function(mu, stderror,n , alpha){
+  ci <- round(mu + c(-1, 1)* qnorm(0.975) * stderror/sqrt(n), 3)
+  return(ci)
+}
+ci1 <- conf.int1(mu, stderror, n, alpha)
+print(ci1)
+```
+
+The confidence interval for n=10 and lambda=0.1 comes out to be [3.771 ,16.241] . As the mean for exponential distribution is 1/lambda here it comes out to be 1/0.1 = 10 . Since 10, lies inside the C.I this test approves the approximation of C.I to be correct via large-sample interval.
+
+
+```{r}
+library(boot)
+x <- (rexp(n,lambda))
+b <- 5000 #no of replicates 
+mean.par <- function(x,i){
+  result <- mean(x[i])
+  return(result)
+}
+
+R <- boot(data = x, R=b ,statistic = mean.par)
+print(R)
+```
+```{r}
+plot(R)
+```
+```{r}
+boot.ci(boot.out = R,conf = 0.95, type= "perc")
+```
+The confidence interval for n=10 and lambda=0.1 comes out to be ( 5.17, 16.47 )  . As the mean for exponential distribution is 1/lambda here it comes out to be 1/0.1 = 10 . Since 10, lies inside the C.I this test approves the approximation of C.I to be correct via the Percentile bootstrap interval.
+
+```{r}
+sort(R$t)[c(25,975)]
+```
+The confidence interval for n=10 and lambda=0.1 comes out to be ( 3.935285, 8.002999 )  . As the mean for exponential distribution is 1/lambda here it comes out to be 1/0.1 = 10 . Since 10 does not lies inside the C.I this test does not approves the approximation of C.I to be correct one via the Percentile bootstrap interval.
+
+
+(b) Repeat (a) for the remaining combinations of (n,lambda). Present an appropriate summary of the results.
+```{r}
+n1 <- c(5, 10, 30, 100)
+lambda1 <- c(0.01, 0.1, 1,10)
+comb <- expand.grid(n1,lambda1)
+
+for (i in n1){
+  for (j in lambda1){
+    mu1 <- mean(replicate(5000,(rexp(i,j))))
+    sd1 <- (sd(replicate(5000,(rexp(i,j)))))
+    values_ci1 <- conf.int1(mu1, sd1,i , alpha)
+    values_ci21 <- boot(data = (rexp(i,j)), R=b ,statistic = mean.par)
+    values_ci22 <- sort(values_ci21$t)[c(25,975)]
+    values_mean <- 1/j
+    res <- ((c(values_ci1,values_ci22,values_mean)))
+    print(res)
+  }
+}
+```
+
+From the above results every value of lambda and n satisfies the mean C.I for the large-sample interval whereas In case of the bootstrap interval only two cases n=30 and lambda=10,n=100 and lambda=0.01 satisfies the mean C.I as appropriate result/inference
+
+
+(c) Interpret all the results. Be sure to answer the following questions: In case of the large-sample interval, how large n is needed for the interval to be accurate? Likewise, in case of the bootstrap interval, how large n is needed for the interval to be accurate? Do these answers depend on lambda? Can we say that one method is more accurate than the other? Which interval would you recommend? Provide justification for all your conclusions.
+
+Ans. For different values of n and lambda from the  C.I results we can see that:
+
+In case of the large-sample interval n=5 sufficies to be large enough to give appropriate outcome irrespective to the value of lambda.
+
+In case of the bootstrap interval for n=30 and lambda=10 the C.I comes out to be [0.09995918, 0.13837950] for which mean is 0.1, as it falls within the C.I this is supposed to be the right approximation. Also, for n=100 and lambda=0.01 the C.I comes out to be [88.43387 ,104.33904] for which mean is 100,as it falls within the C.I so this is supposed to be the right approximation for C.I.
+
+
+(d) Do your conclusions in (c) depend on the specific values of lambda that were fixed in advance? Explain.
+
+Yes, the conclusion in (c) depends on the specific values of lambda that were fixed in advance for the percentile bootstrap interval.
+```{r}
+h<-ggplot(data.frame(x=c(0,5)),aes(x=x))
+h<-h+stat_function(fun=dexp,geom = "line",size=1,col="blue",args = (mean=0.01))
+h<-h+stat_function(fun=dexp,geom = "line",size=1,col="green",args = (mean=0.1))
+h<-h+stat_function(fun=dexp,geom = "line",size=1,col="red",args = (mean=1))
+h<-h+stat_function(fun=dexp,geom = "line",size=1,col="orange",args = (mean=10))
+print(h)
+```
+
+From the graph we can see that as the value of lambda increases the initial value of the exponential density function between (0,1) increases.This doesnot makes any difference for The large-sample interval but makes a significant difference incase of The percentile bootstrap interval. As the second case, bootstraps the value of x from the distribution it can pick most of extreme values from the distribution that can lead to significant interval of C.I. So, for this case even n=5 could lead to a significant C.I for a particular value of lambda and not even 1000 can give you approproate C.I. 
+
+Coming back to the original goal of this exercise to see how large n should be for the large-sample and the (parametric) bootstrap percentile method confidence intervals for the mean of an exponential population to be accurate.
+To answer this question:
+
+a)The large-sample interval : Even n=5 sufficies to be the large enough because this method takes 95% of the data distribution excluding the variational part(which is between 0 to 1).
+
+b)The percentile bootstrap interval: Can't tell any appropriate large enough value of n. n=5 could be large enough to give significant result and n=1000 couldnt be large enough to give significant inference.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
